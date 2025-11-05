@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapi Anime Dashboard ✨</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/616/616408.png" type="image/png">
+
+  <style>
+    * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body {
+      margin:0; height:100vh; overflow:hidden;
+      color:#fff; display:flex; flex-direction:column;
+      align-items:center; justify-content:space-between; text-align:center;
+      background: radial-gradient(circle at top, #0b0b15, #000);
+    }
+    canvas#meteors { position:absolute; top:0; left:0; width:100%; height:100%; z-index:1;}
+    #content { position:relative; z-index:2; width:100%; max-width:700px; margin:auto; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; opacity:0; animation: fadeIn 2s forwards;}
+    @keyframes fadeIn { to { opacity:1; } }
+    #greeting { font-size:1.6em; color:#b084ff; text-shadow:0 0 12px #b084ff; }
+    #time { font-size:4em; color:#fff; text-shadow:0 0 15px #6ab0ff; margin:0.2em 0; }
+    #date { font-size:1.1em; opacity:0.85; color:#ccc; }
+    .search-box {
+      margin-top:3em; width:500px; max-width:90%; display:flex;
+      border-radius:30px; overflow:hidden; background:rgba(30,30,50,0.75);
+      border:1px solid #4b4b80; box-shadow:0 0 15px #3a3a6a;
+    }
+    .search-box input { flex:1; padding:0.9em 1.2em; border:none; outline:none; font-size:1em; color:#fff; background:transparent; }
+    .search-box button { padding:0.9em 1.2em; border:none; background:#3f3fa0; color:#fff; cursor:pointer; transition:background 0.3s; }
+    .search-box button:hover { background:#5a5ad4; }
+    .buttons { margin-top:3em; display:flex; gap:1em; flex-wrap:wrap; justify-content:center; }
+    .btn { background:rgba(30,30,50,0.6); color:#fff; padding:0.8em 1.5em; border-radius:30px; border:1px solid #4b4b80; cursor:pointer; transition:all 0.3s ease; text-decoration:none; box-shadow:0 0 8px #3f3fa0; }
+    .btn:hover { background:rgba(80,80,150,0.7); transform:scale(1.08); box-shadow:0 0 18px #b084ff; }
+    #quote { margin-top:2em; font-style:italic; opacity:0.85; max-width:600px; line-height:1.5em; color:#c0aaff; text-shadow:0 0 8px #6a5acd; }
+    footer { position:absolute; bottom:10px; font-size:0.9em; opacity:0.6; color:#aaa; }
+    #music-btn { position:fixed; top:15px; right:15px; background:rgba(60,60,100,0.6); color:#fff; border:1px solid #6a5acd; border-radius:50%; width:45px; height:45px; font-size:1.2em; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:3; box-shadow:0 0 10px #8a79ff; transition: all 0.3s;}
+    #music-btn:hover { transform:scale(1.1); background:rgba(90,90,160,0.7);}
+  </style>
+</head>
+<body>
+  <canvas id="meteors"></canvas>
+
+  <button id="music-btn">🎵</button>
+  <audio id="bg-music" loop>
+    <source src="https://cdn.pixabay.com/audio/2023/02/28/audio_d95acb0c6d.mp3" type="audio/mpeg" />
+  </audio>
+
+  <div id="content">
+    <div id="greeting"></div>
+    <div id="time"></div>
+    <p id="date"></p>
+
+    <div class="search-box">
+      <input type="text" id="search" placeholder="Cari di Google..." />
+      <button onclick="searchGoogle()">🔍</button>
+    </div>
+
+    <div class="buttons">
+      <a href="https://chat.openai.com" class="btn">🤖 ChatGPT</a>
+      <a href="https://gemini.google.com" class="btn">🌐 Gemini</a>
+      <a href="https://youtube.com" class="btn">▶️ YouTube</a>
+      <a href="https://mail.google.com" class="btn">📧 Gmail</a>
+      <a href="https://github.com" class="btn">💻 GitHub</a>
+      <a href="https://wa.me/628xxxxxxxxxx" class="btn">💬 WhatsApp</a>
+    </div>
+
+    <div id="quote"></div>
+  </div>
+
+  <footer>🌠 Dashboard Anime Style by Rapi Jr 🌠</footer>
+
+  <script>
+    // Waktu & greeting
+    function updateTime() {
+      const now=new Date();
+      document.getElementById('time').textContent=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      document.getElementById('date').textContent=now.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    }
+    function setGreeting(){
+      const hour=new Date().getHours();
+      let greet;
+      if(hour>=5&&hour<11) greet="☀️ Selamat pagi, Rapi!";
+      else if(hour>=11&&hour<15) greet="🌤️ Selamat siang, Rapi!";
+      else if(hour>=15&&hour<18) greet="🌇 Selamat sore, Rapi!";
+      else greet="🌙 Selamat malam, Rapi!";
+      document.getElementById('greeting').textContent=greet;
+    }
+
+    // Quotes + localStorage
+    const quotes=[
+      "Hidup itu kayak anime — tiap episode bikin kamu makin kuat.",
+      "Bahkan karakter utama pun pernah jatuh, tapi mereka bangkit lagi.",
+      "Setiap hari adalah training arc baru buat dirimu.",
+      "Kamu nggak gagal, kamu lagi loading buat next level.",
+      "Percayalah, ending bahagia itu cuma butuh waktu sedikit lagi.",
+      "Jangan takut — bahkan Goku mulai dari 0 power level."
+    ];
+    function setQuote(){
+      let savedQuote=localStorage.getItem('lastQuote');
+      if(savedQuote){ document.getElementById('quote').textContent=savedQuote; }
+      else{
+        const pick=quotes[Math.floor(Math.random()*quotes.length)];
+        document.getElementById('quote').textContent=pick;
+        localStorage.setItem('lastQuote',pick);
+      }
+    }
+
+    // Google search
+    function searchGoogle(){
+      const query=document.getElementById('search').value.trim();
+      if(query) window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`,'_blank');
+    }
+
+    // Musik
+    const music=document.getElementById('bg-music');
+    const musicBtn=document.getElementById('music-btn');
+    let playing=false;
+    music.volume=0.3;
+
+    if(localStorage.getItem('musicPlaying')==='true'){ music.play(); playing=true; musicBtn.textContent='🎵'; }
+    else{ musicBtn.textContent='🔇'; }
+
+    musicBtn.addEventListener('click',()=>{
+      if(playing){ music.pause(); musicBtn.textContent='🔇'; }
+      else{ music.play(); musicBtn.textContent='🎵'; }
+      playing=!playing;
+      localStorage.setItem('musicPlaying',playing);
+    });
+
+    // Meteor effect
+    const canvas=document.getElementById('meteors'); const ctx=canvas.getContext('2d'); let w,h;
+    function resizeCanvas(){ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; }
+    window.addEventListener('resize',resizeCanvas); resizeCanvas();
+
+    const meteors=Array(60).fill().map(()=>({x:Math.random()*w, y:Math.random()*h, len:Math.random()*80+20, speed:Math.random()*5+2, angle:Math.random()*0.5+0.2}));
+    function drawMeteors(){ ctx.clearRect(0,0,w,h); meteors.forEach(m=>{ ctx.beginPath(); const grad=ctx.createLinearGradient(m.x,m.y,m.x-m.len,m.y+m.len); grad.addColorStop(0,'rgba(255,255,255,0.9)'); grad.addColorStop(1,'rgba(100,150,255,0)'); ctx.strokeStyle=grad; ctx.lineWidth=2; ctx.moveTo(m.x,m.y); ctx.lineTo(m.x-m.len,m.y+m.len); ctx.stroke(); m.x+=Math.sin(m.angle)*m.speed*-1; m.y+=Math.cos(m.angle)*m.speed; if(m.y>h||m.x<0){ m.x=Math.random()*w; m.y=-10; } }); requestAnimationFrame(drawMeteors); }
+
+    // Init
+    setGreeting(); setQuote(); setInterval(updateTime,1000); updateTime(); drawMeteors();
+  </script>
+</body>
+</html>
